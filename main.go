@@ -22,6 +22,7 @@ func main() {
 	// 定义命令行参数
 	resPath := flag.String("path", "", "微信数据路径，例如：E:\\scoop\\persist\\wechatDataBackup\\User\\wxid_xxx")
 	chatroomName := flag.String("name", "", "聊天对象的昵称")
+	messageType := flag.Int("type", 1, "要导出的消息类型，0 为所有类型")
 	outputPath := flag.String("output", "messages.csv", "输出文件路径")
 	flag.Parse()
 
@@ -79,7 +80,7 @@ func main() {
 	}
 	defer csvFile.Close()
 	csvWriter := csv.NewWriter(csvFile)
-	csvWriter.Write([]string{"timestamp", "msgNum", "username"})
+	csvWriter.Write([]string{"timestamp", "username", "message", "type"})
 	for _, message := range messages.Rows {
 		name := message.UserInfo.ReMark
 		if name == "" {
@@ -91,7 +92,10 @@ func main() {
 		if name == "" {
 			continue
 		}
-		csvWriter.Write([]string{strconv.FormatInt(message.CreateTime, 10), "1", name})
+		if *messageType != 0 && message.Type != *messageType {
+			continue
+		}
+		csvWriter.Write([]string{strconv.FormatInt(message.CreateTime, 10), name, message.Content, strconv.Itoa(message.Type)})
 	}
 	csvWriter.Flush()
 }
